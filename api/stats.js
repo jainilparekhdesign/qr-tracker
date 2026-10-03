@@ -1,4 +1,4 @@
-import { list } from "@vercel/blob";
+import { list, del } from "@vercel/blob";
 import { timingSafeEqual } from "node:crypto";
 import { PREFIX, decodeScan } from "./_lib.js";
 
@@ -25,6 +25,18 @@ const tally = (arr, key) =>
 export default async function handler(req, res) {
   if (!process.env.STATS_KEY || !safeEq(req.query.key, process.env.STATS_KEY)) {
     return res.status(401).send("Unauthorized — add ?key=YOUR_STATS_KEY");
+  }
+  if (req.method === "POST" && req.query.reset === "1") {
+    for (const prefix of [PREFIX, "diag/"]) {
+      let cursor;
+      do {
+        const page = await list({ prefix, limit: 1000, cursor });
+        if (page.blobs.length) await del(page.blobs.map((b) => b.url));
+        cursor = page.hasMore ? page.cursor : undefined;
+      } while (cursor);
+    }
+    res.setHeader("Location", `/stats?key=${encodeURIComponent(req.query.key)}`);
+    return res.status(303).end();
   }
   let scans;
   try {
@@ -93,6 +105,8 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;width:48px}td.bar{width:
 <div class="card" style="margin-top:12px"><h2>Recent scans</h2><div class="scroll"><table>
 ${recent.map((s) => `<tr><td>${esc(new Date(s.ts).toLocaleString("en-US", { timeZone: tz }))}</td><td>${esc(s.city)}, ${esc(s.country)}</td><td>${esc(s.device)} · ${esc(s.os)}</td></tr>`).join("") || `<tr><td class="muted">No scans yet</td></tr>`}
 </table></div></div>
+<form method="post" action="/stats?key=${esc(encodeURIComponent(req.query.key))}&reset=1" onsubmit="return confirm('Delete all recorded scans? This cannot be undone.')" style="margin-top:16px">
+<button style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer">Reset all scans</button></form>
 <p class="muted" style="font-size:12px">Times in ${esc(tz)}. Unique scanners are estimated from an anonymous salted hash; raw IPs are never stored.</p>
 </main><script>
 const d=${JSON.stringify({ days: data.days, counts: data.counts })};
