@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     // Log before redirecting: Blob auth (OIDC) isn't available once the response has ended.
     // Logging never blocks the redirect: failures are swallowed and capped at 1.5s.
     await Promise.race([
-      put(encodeScan(req), "", { access: "public", addRandomSuffix: true }).catch((e) =>
+      put(encodeScan(req), "1", { access: "public", addRandomSuffix: true }).catch((e) =>
         console.error("scan log failed", e)
       ),
       new Promise((r) => setTimeout(r, 1500)),
