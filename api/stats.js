@@ -1,4 +1,4 @@
-import { list, put } from "@vercel/blob";
+import { list } from "@vercel/blob";
 import { timingSafeEqual } from "node:crypto";
 import { PREFIX, decodeScan } from "./_lib.js";
 
@@ -25,14 +25,6 @@ const tally = (arr, key) =>
 export default async function handler(req, res) {
   if (!process.env.STATS_KEY || !safeEq(req.query.key, process.env.STATS_KEY)) {
     return res.status(401).send("Unauthorized — add ?key=YOUR_STATS_KEY");
-  }
-  if (req.query.diag) {
-    const out = { hasStoreId: !!process.env.BLOB_STORE_ID, hasRwToken: !!process.env.BLOB_READ_WRITE_TOKEN };
-    for (const access of ["public", "private"]) {
-      try { await put("diag/test.txt", "x", { access, addRandomSuffix: true }); out[access] = "ok"; }
-      catch (e) { out[access] = e.message; }
-    }
-    return res.json(out);
   }
   let scans;
   try {
