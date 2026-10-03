@@ -60,6 +60,7 @@ export default async function handler(req, res) {
   }
   const data = {
     days: Object.keys(daily), counts: Object.values(daily),
+    sources: tally(scans, (s) => s.source),
     devices: tally(scans, (s) => s.device), os: tally(scans, (s) => s.os),
     places: tally(scans, (s) => (s.city !== "unknown" ? `${s.city}, ${s.country}` : s.country)).slice(0, 15),
   };
@@ -91,19 +92,20 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;width:48px}td.bar{width:
 </style></head><body><main>
 <h1>QR Scan Tracker</h1><div class="muted">Destination: ${esc(process.env.DEST_URL || "")}</div>
 <div class="kpis">
-<div class="card kpi"><b>${scans.length}</b><span>Total scans</span></div>
+<div class="card kpi"><b>${scans.length}</b><span>Total visits</span></div>
 <div class="card kpi"><b>${unique}</b><span>Unique scanners (est.)</span></div>
 <div class="card kpi"><b>${repeatVisitors}</b><span>Repeat scanners</span></div>
 <div class="card kpi"><b>${today}</b><span>Scans today</span></div>
 </div>
 <div class="card"><h2>Scans per day</h2><canvas id="daily" height="90"></canvas></div>
 <div class="grid">
+<div class="card"><h2>Source</h2>${table(data.sources)}</div>
 <div class="card"><h2>Device</h2>${table(data.devices)}</div>
 <div class="card"><h2>Operating system</h2>${table(data.os)}</div>
 <div class="card"><h2>Location</h2>${table(data.places)}</div>
 </div>
-<div class="card" style="margin-top:12px"><h2>Recent scans</h2><div class="scroll"><table>
-${recent.map((s) => `<tr><td>${esc(new Date(s.ts).toLocaleString("en-US", { timeZone: tz }))}</td><td>${esc(s.city)}, ${esc(s.country)}</td><td>${esc(s.device)} · ${esc(s.os)}</td></tr>`).join("") || `<tr><td class="muted">No scans yet</td></tr>`}
+<div class="card" style="margin-top:12px"><h2>Recent visits</h2><div class="scroll"><table>
+${recent.map((s) => `<tr><td>${esc(new Date(s.ts).toLocaleString("en-US", { timeZone: tz }))}</td><td>${esc(s.city)}, ${esc(s.country)}</td><td>${esc(s.device)} · ${esc(s.os)}</td><td>${esc(s.source)}</td></tr>`).join("") || `<tr><td class="muted">No scans yet</td></tr>`}
 </table></div></div>
 <form method="post" action="/stats?key=${esc(encodeURIComponent(req.query.key))}&reset=1" onsubmit="return confirm('Delete all recorded scans? This cannot be undone.')" style="margin-top:16px">
 <button style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer">Reset all scans</button></form>

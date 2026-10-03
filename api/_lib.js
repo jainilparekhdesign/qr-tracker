@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 // Each scan is stored as an empty blob whose pathname encodes the data:
-// scans/<ms>__<country>__<city>__<device>__<os>__<visitor>.txt
+// scans/<ms>__<country>__<city>__<device>__<os>__<visitor>__<source>.txt
 // so the dashboard only needs list() calls, never per-blob fetches.
 export const PREFIX = "scans/";
 const SEP = "__";
@@ -33,12 +33,14 @@ export function encodeScan(req) {
     .update(`${process.env.HASH_SALT || "qr"}|${ip}|${ua}`)
     .digest("hex")
     .slice(0, 12);
-  const parts = [Date.now(), clean(h["x-vercel-ip-country"]), clean(city), device, os, visitor];
+  // ?s=<label> marks where the visit came from (e.g. a group name); bare /go is the QR code.
+  const source = clean(String(req.query?.s || "qr").toLowerCase()).replace(/ /g, "-");
+  const parts = [Date.now(), clean(h["x-vercel-ip-country"]), clean(city), device, os, visitor, source];
   return `${PREFIX}${parts.join(SEP)}.txt`;
 }
 
 export function decodeScan(pathname) {
   const name = pathname.slice(PREFIX.length).replace(/(-[A-Za-z0-9]+)?\.txt$/, "");
-  const [ts, country, city, device, os, visitor] = name.split(SEP);
-  return { ts: Number(ts), country, city, device, os, visitor };
+  const [ts, country, city, device, os, visitor, source = "qr"] = name.split(SEP);
+  return { ts: Number(ts), country, city, device, os, visitor, source };
 }
