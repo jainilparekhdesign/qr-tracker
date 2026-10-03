@@ -26,7 +26,13 @@ export default async function handler(req, res) {
   if (!process.env.STATS_KEY || !safeEq(req.query.key, process.env.STATS_KEY)) {
     return res.status(401).send("Unauthorized — add ?key=YOUR_STATS_KEY");
   }
-  const scans = await allScans();
+  let scans;
+  try {
+    scans = await allScans();
+  } catch (e) {
+    console.error("stats: blob list failed", e);
+    return res.status(500).send(`Could not read scan log: ${esc(e.message)}. Check that a Blob store is connected to this project, then redeploy.`);
+  }
   const tz = req.query.tz || "America/New_York";
   const dayOf = (ts) => new Date(ts).toLocaleDateString("en-CA", { timeZone: tz });
 

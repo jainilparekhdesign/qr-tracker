@@ -16,6 +16,6 @@ Environment variables (Production):
 | `DEST_URL` | Where scans are sent (change any time; no need to reprint the QR) |
 | `STATS_KEY` | Secret key for the stats page |
 | `HASH_SALT` | Random salt for anonymous visitor IDs |
-| `BLOB_READ_WRITE_TOKEN` | Added automatically when you connect a Vercel Blob store (access: Public) |
+| `BLOB_STORE_ID` (or `BLOB_READ_WRITE_TOKEN`) | Added automatically when you connect a Vercel Blob store |
 
 Deploy with `./deploy.sh`, or import this repo in Vercel and add the variables above.

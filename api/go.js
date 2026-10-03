@@ -8,10 +8,13 @@ export default function handler(req, res) {
 
   const isBot = /bot|crawl|spider|preview|facebookexternalhit|slurp/i.test(req.headers["user-agent"] || "");
   if (!isBot && req.method === "GET") {
+    const path = encodeScan(req);
+    // Works whether the Blob store was created as public or private.
+    const log = (access) => put(path, "", { access, addRandomSuffix: true });
     waitUntil(
-      put(encodeScan(req), "", { access: "public", addRandomSuffix: true }).catch((e) =>
-        console.error("scan log failed", e)
-      )
+      log("public")
+        .catch(() => log("private"))
+        .catch((e) => console.error("scan log failed", e))
     );
   }
 
