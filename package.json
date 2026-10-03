@@ -1,0 +1,12 @@
+{
+  "name": "qr-tracker",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vercel/blob": "^1.0.0",
+    "@vercel/functions": "^2.0.0"
+  },
+  "devDependencies": {
+    "qrcode": "^1.5.4"
+  }
+}
